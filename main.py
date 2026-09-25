@@ -1,8 +1,10 @@
+from database import init_db
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
 app = FastAPI()
+init_db()
 
 class TaskCreate(BaseModel):
     title: Optional[str] = None
