@@ -1,7 +1,7 @@
 # Task API
 
 A simple CRUD API for managing a to-do list, built with Python and FastAPI.
-Data is stored in memory (a Python list) — it resets whenever the server restarts.
+Data is stored in a **SQLite database** (`tasks.db`) — it survives server restarts.
 
 ## How to run it
 
@@ -20,6 +20,16 @@ pip install fastapi uvicorn
 uvicorn main:app --reload
 
 5. Visit `http://127.0.0.1:8000` in your browser, or `http://127.0.0.1:8000/docs` for interactive Swagger UI.
+
+The first time the server runs, it automatically creates `tasks.db` and a `tasks` table, and inserts 3 example tasks if the table is empty. No manual setup is needed.
+
+## Why SQLite
+
+SQLite was chosen because it requires no separate database server or installation — it's a single file (`tasks.db`) that Python's built-in `sqlite3` module can read and write directly. That makes it ideal for a small project like this: simple to set up, easy to inspect, and still real SQL underneath.
+
+## Where the database file is stored
+
+The database lives at the root of the project folder, in a file called `tasks.db`. It's created automatically on first run and is excluded from version control via `.gitignore`.
 
 ## Endpoints
 
@@ -42,7 +52,15 @@ Response:
 HTTP/1.1 200 OK
 content-type: application/json
 
-{"id":1,"title":"Buy groceries and milk","done":true}
+{"id":1,"title":"Buy groceries","done":false}
+
+## Example SQL query
+
+Run directly against `tasks.db` using a SQLite viewer (e.g. DB Browser for SQLite):
+
+SELECT * FROM tasks WHERE done = 1;
+
+This returns every task marked as completed.
 
 ## Swagger UI
 
@@ -50,6 +68,10 @@ Screenshot below shows all endpoints available at `/docs`:
 
 (screenshot added separately after pushing)
 
-## Note on in-memory storage
+## Database viewer screenshot
 
-Since tasks live only in a Python list, all data is lost when the server restarts — this is expected at this stage; a database comes in a later assignment.
+![DB Browser for SQLite showing the tasks table](db-screenshot.png)
+
+## Notes
+
+The API's endpoints, request bodies, and responses are identical to the earlier in-memory version — only the storage layer changed, from a Python list to a SQLite database.
