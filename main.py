@@ -1,4 +1,4 @@
-from database import init_db
+from database import init_db, get_all_tasks, get_task_by_id
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
@@ -29,14 +29,14 @@ def health_check():
 
 @app.get("/tasks", summary="List all tasks")
 def get_tasks():
-    return tasks
+    return get_all_tasks()
 
 @app.get("/tasks/{task_id}", summary="Get a single task by id")
 def get_task(task_id: int):
-    for task in tasks:
-        if task["id"] == task_id:
-            return task
-    raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    task = get_task_by_id(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    return task
 
 @app.post("/tasks", status_code=201, summary="Create a new task")
 def create_task(task: TaskCreate):
