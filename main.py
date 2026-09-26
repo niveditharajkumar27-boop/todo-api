@@ -1,4 +1,4 @@
-from database import init_db, get_all_tasks, get_task_by_id, create_task as db_create_task
+from database import init_db, get_all_tasks, get_task_by_id, create_task as db_create_task, update_task as db_update_task, delete_task as db_delete_task
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
@@ -46,21 +46,16 @@ def create_task(task: TaskCreate):
 
 @app.put("/tasks/{task_id}", summary="Update a task's title or done status")
 def update_task(task_id: int, update: TaskUpdate):
-    for task in tasks:
-        if task["id"] == task_id:
-            if update.title is not None:
-                if not update.title.strip():
-                    raise HTTPException(status_code=400, detail="Title cannot be empty")
-                task["title"] = update.title
-            if update.done is not None:
-                task["done"] = update.done
-            return task
-    raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    if update.title is not None and not update.title.strip():
+        raise HTTPException(status_code=400, detail="Title cannot be empty")
+    result = db_update_task(task_id, title=update.title, done=update.done)
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    return result
 
 @app.delete("/tasks/{task_id}", status_code=204, summary="Delete a task")
 def delete_task(task_id: int):
-    for i, task in enumerate(tasks):
-        if task["id"] == task_id:
-            tasks.pop(i)
-            return
-    raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    deleted = db_delete_task(task_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    return

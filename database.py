@@ -64,3 +64,37 @@ def create_task(title: str):
     new_id = cursor.lastrowid
     conn.close()
     return {"id": new_id, "title": title, "done": False}
+
+def update_task(task_id: int, title: str = None, done: bool = None):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    existing = get_task_by_id(task_id)
+    if existing is None:
+        conn.close()
+        return None
+
+    new_title = title if title is not None else existing["title"]
+    new_done = done if done is not None else existing["done"]
+
+    cursor.execute(
+        "UPDATE tasks SET title = ?, done = ? WHERE id = ?",
+        (new_title, int(new_done), task_id)
+    )
+    conn.commit()
+    conn.close()
+
+    return {"id": task_id, "title": new_title, "done": new_done}
+
+def delete_task(task_id: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM tasks WHERE id = ?", (task_id,))
+    row = cursor.fetchone()
+    if row is None:
+        conn.close()
+        return False
+    cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    conn.commit()
+    conn.close()
+    return True
